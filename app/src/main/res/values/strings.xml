@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">SketchOrGuess</string>
+    <string name="app_name" translatable="false">SketchOrGuess</string>
+    <string name="chat_icon">Chat</string>
+
 </resources>
