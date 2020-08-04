@@ -2,14 +2,15 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
 
     <com.main.sketchorguess.DrawCanvas
         android:id="@+id/DrawCanvas"
-        android:layout_width="733dp"
-        android:layout_height="793dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -19,8 +20,8 @@
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/BottomNavigation"
-        android:layout_width="0dp"
-        android:layout_height="160dp"
+        android:layout_width="match_parent"
+        android:layout_height="78dp"
         android:layout_gravity="bottom"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -29,6 +30,16 @@
         app:layout_constraintTop_toBottomOf="@+id/DrawCanvas"
         app:layout_constraintVertical_bias="1.0"
         app:menu="@menu/bottom_navigation_menu" />
+
+    <include
+        android:id="@+id/brush_component_layout"
+        layout="@layout/brush_component_layout"
+        android:layout_width="match_parent"
+        android:layout_height="123dp"
+        app:layout_constraintBottom_toTopOf="@+id/BottomNavigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">SketchOrGuess</string>
     <string name="chat_icon">Chat</string>
+    <string name="penic_icon">Rita</string>
 </resources>
