@@ -14,8 +14,10 @@ import androidx.annotation.Nullable;
 import java.util.ArrayList;
 
 public class BrushComponentView extends View {
-    ArrayList<Rect> listRect;
-    ArrayList<Paint> listColor;
+    private ArrayList<Rect> listRect;
+    private ArrayList<Paint> listColor;
+    private int markedRect = 0;
+    private Paint backupPaint;
     public BrushComponentView(Context context) {
         super(context);
         init(null);
@@ -33,6 +35,7 @@ public class BrushComponentView extends View {
     private void init(@Nullable AttributeSet set){
         listRect = new ArrayList<>();
         listColor = new ArrayList<>();
+        backupPaint = new Paint();
         loadRect();
         invalidate();
     }
@@ -45,7 +48,8 @@ public class BrushComponentView extends View {
         rect.set(0,0,100,100);
         listColor.add(paint);
         listRect.add(rect);
-
+        
+        backupPaint.set(paint);
 
         rect = new Rect();
         paint = new Paint();
@@ -96,13 +100,42 @@ public class BrushComponentView extends View {
 
         for(int i = 0; i < listRect.size(); i++){
             canvas.drawRect(listRect.get(i), listColor.get(i));
+            if(i == markedRect){
+                Log.i("MARKEDRECT", Integer.toString(markedRect));
+                listColor.get(i).setStyle(Paint.Style.STROKE);
+                listColor.get(i).setStrokeWidth(20);
+                listColor.get(i).setColor(Color.WHITE);
+                canvas.drawRect(listRect.get(i),listColor.get(i));
+            }
         }
     }
 
     public void setBrushColor(int x, int y){
 
-        Log.i("XTOUCH", Integer.toString(x));
-        Log.i("YTOUCH", Integer.toString(y));
 
+        for(int i = 0; i < listRect.size(); i++){
+            if(x > listRect.get(i).left && x < listRect.get(i).right){
+                if(y > listRect.get(i).top && y < listRect.get(i).bottom){
+
+                    Paint paint = new Paint();
+
+                    paint.setColor(backupPaint.getColor());
+
+                    listColor.set(markedRect,paint);
+                    backupPaint.set(listColor.get(i));
+
+
+                    markedRect = i;
+
+
+                    invalidate();
+                }
+            }
+        }
+
+    }
+
+    public Paint getMarkedPaint(){
+        return listColor.get(markedRect);
     }
 }

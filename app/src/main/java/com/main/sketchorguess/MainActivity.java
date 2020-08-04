@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity{
             public boolean onTouch(View v, MotionEvent event) {
 
                 brushComponentView.setBrushColor((int)event.getX(),(int) event.getY());
-                return true;
+                return false;
             }
         });
 
