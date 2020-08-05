@@ -48,7 +48,7 @@ public class BrushComponentView extends View {
         rect.set(0,0,100,100);
         listColor.add(paint);
         listRect.add(rect);
-        
+
         backupPaint.set(paint);
 
         rect = new Rect();
