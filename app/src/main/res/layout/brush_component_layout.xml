@@ -33,7 +33,7 @@
         app:layout_constraintTop_toBottomOf="@+id/brushtext" />
 
     <ImageButton
-        android:id="@+id/imageButton"
+        android:id="@+id/pencil_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
@@ -41,18 +41,19 @@
         app:srcCompat="@android:drawable/ic_menu_edit" />
 
     <ImageButton
-        android:id="@+id/imageButton2"
+        android:id="@+id/erase_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toEndOf="@+id/imageButton"
+        app:layout_constraintStart_toEndOf="@+id/pencil_button"
         app:layout_constraintTop_toBottomOf="@+id/divider"
         app:srcCompat="@android:drawable/btn_dialog" />
 
     <ImageButton
-        android:id="@+id/imageButton3"
+        android:id="@+id/clear_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toEndOf="@+id/imageButton2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/erase_button"
         app:layout_constraintTop_toBottomOf="@+id/divider"
         app:srcCompat="@android:drawable/stat_sys_warning" />
 
@@ -63,7 +64,7 @@
         android:background="?android:attr/listDivider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageButton" />
+        app:layout_constraintTop_toBottomOf="@+id/pencil_button" />
 
     <com.main.sketchorguess.BrushComponentView
         android:id="@+id/brush_component_view"
