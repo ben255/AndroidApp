@@ -11,9 +11,10 @@
         android:id="@+id/brushtext"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView"
+        android:text="@string/brush_size"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        />
 
     <SeekBar
         android:id="@+id/seekBar"
@@ -21,7 +22,9 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/brushtext"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:min="10"
+        android:max="80" />
 
     <View
         android:id="@+id/divider"
@@ -34,28 +37,34 @@
 
     <ImageButton
         android:id="@+id/pencil_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider"
-        app:srcCompat="@android:drawable/ic_menu_edit" />
+        app:srcCompat="@drawable/pencil_icon"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"/>
 
     <ImageButton
         android:id="@+id/erase_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
         app:layout_constraintStart_toEndOf="@+id/pencil_button"
         app:layout_constraintTop_toBottomOf="@+id/divider"
-        app:srcCompat="@android:drawable/btn_dialog" />
+        app:srcCompat="@drawable/eraser_icon" />
 
     <ImageButton
         android:id="@+id/clear_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/erase_button"
         app:layout_constraintTop_toBottomOf="@+id/divider"
-        app:srcCompat="@android:drawable/stat_sys_warning" />
+        app:srcCompat="@drawable/erase_all_icon"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"/>
 
     <View
         android:id="@+id/divider3"

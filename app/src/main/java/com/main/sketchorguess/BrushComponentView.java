@@ -18,6 +18,7 @@ public class BrushComponentView extends View {
     private ArrayList<Paint> listColor;
     private int markedRect = 0;
     private Paint backupPaint;
+    private Paint temp;
     public BrushComponentView(Context context) {
         super(context);
         init(null);
@@ -36,6 +37,7 @@ public class BrushComponentView extends View {
         listRect = new ArrayList<>();
         listColor = new ArrayList<>();
         backupPaint = new Paint();
+        temp = new Paint();
         loadRect();
         invalidate();
     }
@@ -101,10 +103,10 @@ public class BrushComponentView extends View {
         for(int i = 0; i < listRect.size(); i++){
             canvas.drawRect(listRect.get(i), listColor.get(i));
             if(i == markedRect){
-                listColor.get(i).setStyle(Paint.Style.STROKE);
-                listColor.get(i).setStrokeWidth(20);
-                listColor.get(i).setColor(Color.WHITE);
-                canvas.drawRect(listRect.get(i),listColor.get(i));
+                temp.setStyle(Paint.Style.STROKE);
+                temp.setStrokeWidth(10);
+                temp.setColor(Color.WHITE);
+                canvas.drawRect(listRect.get(i),temp);
             }
         }
     }
@@ -135,6 +137,6 @@ public class BrushComponentView extends View {
     }
 
     public Paint getMarkedPaint(){
-        return listColor.get(markedRect);
+        return backupPaint;
     }
 }

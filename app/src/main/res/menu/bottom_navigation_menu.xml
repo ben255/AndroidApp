@@ -6,13 +6,15 @@
         android:id="@+id/page_1"
         android:enabled="true"
         android:icon="@drawable/chat_icon"
-        android:title="@string/chat_icon"/>
+        android:title="@string/chat_icon"
+        android:checkable="true"/>
 
     <item
         android:id="@+id/page_2"
         android:enabled="true"
         android:icon="@drawable/pencil_icon"
-        android:title="@string/penic_icon"/>
+        android:title="@string/penic_icon"
+        android:checkable="true"/>
 
 
 </menu>

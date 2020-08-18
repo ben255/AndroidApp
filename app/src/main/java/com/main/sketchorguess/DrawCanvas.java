@@ -16,36 +16,49 @@ public class DrawCanvas extends View{
 
 
     ArrayList<BrushData> dataArray;
+    Paint paint;
 
     public DrawCanvas(Context context){
         super(context);
+        init();
     }
     public DrawCanvas(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init();
     }
 
     public DrawCanvas(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        init();
+    }
+
+    private void init(){
+        paint = new Paint();
+        paint.setColor(Color.BLACK);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(5);
     }
 
     @Override
     protected void onDraw(Canvas canvas){
         super.onDraw(canvas);
-        if(dataArray != null)
-            for(int i = 0; i < dataArray.size(); i++){
-                if(i > 0){
-                    int dx = dataArray.get(i).x - dataArray.get(i-1).x;
-                    int dy = dataArray.get(i).y - dataArray.get(i-1).y;
-                    if((Math.pow(dx, 2)+Math.pow(dy,2)) > 10 && (Math.pow(dx, 2)+Math.pow(dy,2)) < 5000){
+        if(dataArray != null && dataArray.size() > 0) {
+            for (int i = 0; i < dataArray.size(); i++) {
+                if (i > 0) {
+                    int dx = dataArray.get(i).x - dataArray.get(i - 1).x;
+                    int dy = dataArray.get(i).y - dataArray.get(i - 1).y;
+                    if ((Math.pow(dx, 2) + Math.pow(dy, 2)) > 10 && (Math.pow(dx, 2) + Math.pow(dy, 2)) < 5000) {
 
-                        canvas.drawLine(dataArray.get(i-1).x, dataArray.get(i-1).y, dataArray.get(i).x, dataArray.get(i).y, dataArray.get(i).paint);
-                    }else
+                        canvas.drawLine(dataArray.get(i - 1).x, dataArray.get(i - 1).y, dataArray.get(i).x, dataArray.get(i).y, dataArray.get(i).paint);
+                    } else
                         canvas.drawCircle(dataArray.get(i).x, dataArray.get(i).y, dataArray.get(i).brushWidth, dataArray.get(i).paint);
 
-                }else
+                } else
                     canvas.drawCircle(dataArray.get(i).x, dataArray.get(i).y, dataArray.get(i).brushWidth, dataArray.get(i).paint);
             }
 
+            canvas.drawCircle(dataArray.get(dataArray.size()-1).x,dataArray.get(dataArray.size()-1).y,dataArray.get(dataArray.size()-1).brushWidth,paint);
+        }
 
 
     }
@@ -53,6 +66,5 @@ public class DrawCanvas extends View{
     public void setBrushData(ArrayList<BrushData> dataArray) {
         this.dataArray = dataArray;
         invalidate();
-
     }
 }

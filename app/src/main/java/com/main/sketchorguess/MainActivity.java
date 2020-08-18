@@ -9,6 +9,8 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageButton;
+import android.widget.SeekBar;
 
 import java.util.ArrayList;
 
@@ -27,6 +29,14 @@ public class MainActivity extends AppCompatActivity{
 
     View brushComponent_layout;
 
+    SeekBar seekBar;
+
+    ImageButton pencilButton;
+    ImageButton eraseButton;
+    ImageButton clearButton;
+
+    boolean isPencil = true;
+
 
 
     BottomNavigationView bottomNavigationView;
@@ -39,44 +49,51 @@ public class MainActivity extends AppCompatActivity{
         brushComponent_layout = (View) findViewById(R.id.brush_component_layout);
 
 
-        drawView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent motionEvent) {
-
-                brushData = new BrushData();
-
-                paint = new Paint();
-                paint.setColor(Color.BLUE);
-                paint.setStrokeWidth(20);
-                brushData.brushWidth = 10;
-                brushData.paint = paint;
-
-                switch (motionEvent.getAction()) {
-
-                    case MotionEvent.ACTION_DOWN:
-                        brushData.x = (int) motionEvent.getX();
-                        brushData.y = (int) motionEvent.getY();
-                        dataArray.add(brushData);
-                        break;
-
-                    case MotionEvent.ACTION_MOVE:
-                        brushData.x = (int) motionEvent.getX();
-                        brushData.y = (int) motionEvent.getY();
-                        dataArray.add(brushData);
-                        break;
-                }
-
-                drawView.setBrushData(dataArray);
-                return true;
-            }
-        });
         brushComponentView = (BrushComponentView) findViewById(R.id.brush_component_view);
+
         brushComponentView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
 
                 brushComponentView.setBrushColor((int)event.getX(),(int) event.getY());
                 return false;
+            }
+        });
+
+
+        drawView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent motionEvent) {
+
+                if(brushComponent_layout.getVisibility() == View.INVISIBLE) {
+                    brushData = new BrushData();
+                    paint = new Paint();
+                    if(isPencil)
+                        paint.setColor(brushComponentView.getMarkedPaint().getColor());
+                    else
+                        paint.setColor(Color.WHITE);
+                    paint.setStrokeWidth(seekBar.getProgress() * 2);
+                    brushData.brushWidth = seekBar.getProgress();
+                    brushData.paint = paint;
+
+                    switch (motionEvent.getAction()) {
+
+                        case MotionEvent.ACTION_DOWN:
+                            brushData.x = (int) motionEvent.getX();
+                            brushData.y = (int) motionEvent.getY();
+                            dataArray.add(brushData);
+                            break;
+
+                        case MotionEvent.ACTION_MOVE:
+                            brushData.x = (int) motionEvent.getX();
+                            brushData.y = (int) motionEvent.getY();
+                            dataArray.add(brushData);
+                            break;
+                    }
+
+                    drawView.setBrushData(dataArray);
+                }
+                return true;
             }
         });
 
@@ -89,39 +106,58 @@ public class MainActivity extends AppCompatActivity{
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()){
                     case R.id.page_1:
-                        Log.i("CLICKED", "CLICKED ONE");
+                        brushComponent_layout.setVisibility(View.INVISIBLE);
+
+                        item.setChecked(true);
                         break;
                     case R.id.page_2:
-                        if(item.isChecked()) {
-                            item.setChecked(false);
+                        if(brushComponent_layout.getVisibility() == View.VISIBLE) {
+
                             brushComponent_layout.setVisibility(View.INVISIBLE);
                         }
                         else {
-                            item.setChecked(false);
+                            item.setChecked(true);
                             brushComponent_layout.setVisibility(View.VISIBLE);
                         }
                         break;
                     default:
                         break;
                 }
-                return false;
+                return true;
             }
         });
 
         dataArray = new ArrayList<>();
 
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
+
+        pencilButton = (ImageButton) findViewById(R.id.pencil_button);
+        eraseButton = (ImageButton) findViewById(R.id.erase_button);
+        clearButton = (ImageButton) findViewById(R.id.clear_button);
+
+        clearButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dataArray.clear();
+                drawView.invalidate();
+            }
+        });
+
+        pencilButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isPencil = true;
+            }
+        });
+
+        eraseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isPencil = false;
+            }
+        });
+
 
     }
-
-
-/*
-    brushData.x = (int) motionEvent.getX();
-    brushData.y = (int) motionEvent.getY();
-    brushData.brushWidth = 10;
-    Paint paint = new Paint();
-        paint.setColor(Color.BLUE);
-    brushData.paint = paint;
-
-        drawView.setBrushData(brushData);*/
 
 }

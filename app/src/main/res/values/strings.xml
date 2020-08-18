@@ -2,5 +2,6 @@
     <string name="app_name" translatable="false">SketchOrGuess</string>
     <string name="chat_icon">Chat</string>
     <string name="penic_icon">Draw</string>
+    <string name="brush_size">Size</string>
 
 </resources>
