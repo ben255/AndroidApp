@@ -101,7 +101,6 @@ public class BrushComponentView extends View {
         for(int i = 0; i < listRect.size(); i++){
             canvas.drawRect(listRect.get(i), listColor.get(i));
             if(i == markedRect){
-                Log.i("MARKEDRECT", Integer.toString(markedRect));
                 listColor.get(i).setStyle(Paint.Style.STROKE);
                 listColor.get(i).setStrokeWidth(20);
                 listColor.get(i).setColor(Color.WHITE);

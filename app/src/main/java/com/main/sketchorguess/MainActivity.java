@@ -5,11 +5,14 @@ import android.graphics.Paint;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AdapterView;
 
 import java.util.ArrayList;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -22,6 +25,8 @@ public class MainActivity extends AppCompatActivity{
     Paint paint;
     ArrayList<BrushData> dataArray;
 
+    View brushComponent_layout;
+
 
 
     BottomNavigationView bottomNavigationView;
@@ -30,6 +35,8 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         drawView = (DrawCanvas) findViewById(R.id.DrawCanvas);
+
+        brushComponent_layout = (View) findViewById(R.id.brush_component_layout);
 
 
         drawView.setOnTouchListener(new View.OnTouchListener() {
@@ -76,6 +83,30 @@ public class MainActivity extends AppCompatActivity{
         bottomNavigationView = (BottomNavigationView) findViewById(R.id.BottomNavigation);
 
         bottomNavigationView.setBackground(new ColorDrawable(getResources().getColor(R.color.colorBottomBar)));
+
+        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()){
+                    case R.id.page_1:
+                        Log.i("CLICKED", "CLICKED ONE");
+                        break;
+                    case R.id.page_2:
+                        if(item.isChecked()) {
+                            item.setChecked(false);
+                            brushComponent_layout.setVisibility(View.INVISIBLE);
+                        }
+                        else {
+                            item.setChecked(false);
+                            brushComponent_layout.setVisibility(View.VISIBLE);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                return false;
+            }
+        });
 
         dataArray = new ArrayList<>();
 
