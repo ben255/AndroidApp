@@ -1,14 +1,17 @@
 package com.main.sketchorguess;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.ColorDrawable;
+import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SeekBar;
@@ -40,7 +43,11 @@ public class MainActivity extends AppCompatActivity{
     boolean isPencil = true;
 
     ListView chatList;
-
+    ArrayList<TextData> chatTextList;
+    ImageButton sendTextButton;
+    EditText editTextText;
+    Context context;
+    ChatAdapter adapter;
 
 
     BottomNavigationView bottomNavigationView;
@@ -172,8 +179,27 @@ public class MainActivity extends AppCompatActivity{
         });
 
         chatList = (ListView) findViewById(R.id.chat_list);
-        chatList.setAdapter(new ChatAdapter(this));
-        Log.i("************", String.valueOf(chatList.getCount()));
+        chatTextList = new ArrayList<>();
+        sendTextButton = (ImageButton) findViewById(R.id.send_answer_button);
+        editTextText = (EditText) findViewById(R.id.write_edit_text);
+        context = this;
+        adapter = new ChatAdapter(context, chatTextList);
+
+        chatList.setAdapter(adapter);
+
+        sendTextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!editTextText.getText().toString().equals("")) {
+                    TextData data = new TextData("USER", editTextText.getText().toString());
+                    chatTextList.add(data);
+                    chatList.setAdapter(adapter);
+                }
+            }
+        });
+
+
+
 
     }
 

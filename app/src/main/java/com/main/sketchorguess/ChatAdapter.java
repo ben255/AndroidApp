@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 public class ChatAdapter extends BaseAdapter {
 
     Context context;
@@ -16,12 +18,18 @@ public class ChatAdapter extends BaseAdapter {
     TextView userName;
     TextView userText;
 
-    ChatAdapter(Context context){
+    ArrayList<TextData> data;
+
+    ChatAdapter(Context context, ArrayList<TextData> data){
         this.context = context;
+        this.data = data;
     }
     @Override
     public int getCount() {
-        return 8;
+        if(data != null)
+            return data.size();
+        else
+            return 0;
     }
 
     @Override
@@ -45,45 +53,9 @@ public class ChatAdapter extends BaseAdapter {
         userName =(TextView) convertView.findViewById(R.id.list_item_name);
         userText = (TextView) convertView.findViewById(R.id.list_item_text);
 
-        if(position == 0) {
-            userName.setText("User1");
-            userText.setText("Text1");
-        }
 
-        if(position == 1) {
-            userName.setText("User2");
-            userText.setText("Text2");
-        }
-
-        if(position == 2) {
-            userName.setText("User3");
-            userText.setText("Text3");
-        }
-
-        if(position == 3) {
-            userName.setText("User4");
-            userText.setText("Text4");
-        }
-
-        if(position == 4) {
-            userName.setText("User1");
-            userText.setText("Text1");
-        }
-
-        if(position == 5) {
-            userName.setText("User2");
-            userText.setText("Text2");
-        }
-
-        if(position == 6) {
-            userName.setText("User3");
-            userText.setText("Text3");
-        }
-
-        if(position == 7) {
-            userName.setText("User4");
-            userText.setText("Text4");
-        }
+        userName.setText(data.get(position).user);
+        userText.setText(data.get(position).text);
 
 
         return convertView;
