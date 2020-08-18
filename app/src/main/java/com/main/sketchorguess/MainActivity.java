@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -20,6 +21,8 @@ import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.MenuBuilder;
+import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -48,6 +51,9 @@ public class MainActivity extends AppCompatActivity{
     EditText editTextText;
     Context context;
     ChatAdapter adapter;
+
+    Toolbar toolbar;
+    MenuBuilder menuBuilder;
 
 
     BottomNavigationView bottomNavigationView;
@@ -197,6 +203,18 @@ public class MainActivity extends AppCompatActivity{
                 }
             }
         });
+
+        toolbar = (Toolbar) findViewById(R.id.brush_toolbar);
+        toolbar.setBackground(new ColorDrawable(getResources().getColor(R.color.colorBottomBar)));
+        toolbar.setTitle("__  __  __  __  __  __");
+        setSupportActionBar(toolbar);
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.clear();
+        menu.add(0,0,0,"Hello World: "+10);
+
+        return super.onPrepareOptionsMenu(menu);
+    }
 }
