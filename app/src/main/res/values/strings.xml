@@ -3,5 +3,6 @@
     <string name="chat_icon">Chat</string>
     <string name="penic_icon">Draw</string>
     <string name="brush_size">Size</string>
+    <string name="username_name">Username</string>
 
 </resources>
