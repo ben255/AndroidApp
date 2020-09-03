@@ -3,6 +3,7 @@ package com.main.sketchorguess;
 import android.content.Intent;
 import android.net.Network;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,25 +28,20 @@ public class MainActivity extends AppCompatActivity {
     private Button playButton;
     private EditText loginText;
 
-    final TextView textView = (TextView) findViewById(R.id.text);
+    private TextView textView;
 // ...
 
-    // Instantiate the cache
-    DiskBasedCache cache = new DiskBasedCache(getCacheDir(), 1024 * 1024); // 1MB cap
-    // Set up the network to use HttpURLConnection as the HTTP client.
-    BasicNetwork network = new BasicNetwork(new HurlStack());
-
-    // Instantiate the RequestQueue.
-    RequestQueue queue = Volley.newRequestQueue(this);
-    String url ="10.0.0.9:3000";
+    DiskBasedCache cache;
+    BasicNetwork network;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        loginText = (EditText) findViewById(R.id.login_edit_text);
+        textView = (TextView) findViewById(R.id.text_view_main);
 
-                playButton = (Button) findViewById(R.id.play_button);
+        loginText = (EditText) findViewById(R.id.login_edit_text);
+        playButton = (Button) findViewById(R.id.play_button);
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -53,17 +49,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Instantiate the cache
+        cache = new DiskBasedCache(getCacheDir(), 1024 * 1024); // 1MB cap
+        // Set up the network to use HttpURLConnection as the HTTP client.
+        network = new BasicNetwork(new HurlStack());
+
+        // Instantiate the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(this);
+        String url ="http://10.0.0.9:3000";
+
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
-                        textView.setText("Response is: "+ response.substring(0,500));
+                        textView.setText("Response is: "+ response.substring(0,11));
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                Log.i("ResponsError", error.toString());
                 textView.setText("That didn't work!");
             }
         });
