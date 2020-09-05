@@ -13,15 +13,23 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.solver.Cache;
 
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.BasicNetwork;
 import com.android.volley.toolbox.DiskBasedCache;
 import com.android.volley.toolbox.HurlStack;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     DiskBasedCache cache;
     BasicNetwork network;
-
+    RequestQueue queue;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,29 +61,84 @@ public class MainActivity extends AppCompatActivity {
         cache = new DiskBasedCache(getCacheDir(), 1024 * 1024); // 1MB cap
         // Set up the network to use HttpURLConnection as the HTTP client.
         network = new BasicNetwork(new HurlStack());
+        queue = Volley.newRequestQueue(this);
 
-        // Instantiate the RequestQueue.
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="http://10.0.0.9:3000";
+        getRequest();
+        postRequest();
 
+
+    }
+
+    private void getRequest() {
         // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
+        // Instantiate the RequestQueue.
+        String url = "http://10.0.0.9:3000/";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
+                (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+
                     @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        textView.setText("Response is: "+ response.substring(0,11));
+                    public void onResponse(JSONObject response) {
+                        textView.setText("Response: " + response.toString());
                     }
                 }, new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // TODO: Handle error
+                        textView.setText("Error:"+error.toString());
+                    }
+                });
+
+// Access the RequestQueue through your singleton class.
+        MySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
+    }
+
+    private void postRequest() {
+        // Request a string response from the provided URL.
+        // Instantiate the RequestQueue.
+        String url = "http://10.0.0.9:3000/hello";
+
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
+                (Request.Method.POST, url,  null, new Response.Listener<JSONObject>() {
+
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try{
+                            Log.i("*********", "******");
+                            response.put("Hello", "World");
+                        }catch(JSONException e){
+                            Log.i("JSONERROR", e.toString());
+                        }
+                    }
+                }, new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // TODO: Handle error
+                        Log.i("*********", error.toString());
+                    }
+                });
+        jsonObjectRequest.setRetryPolicy(new RetryPolicy() {
             @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.i("ResponsError", error.toString());
-                textView.setText("That didn't work!");
+            public int getCurrentTimeout() {
+                return 1000;
+            }
+
+            @Override
+            public int getCurrentRetryCount() {
+                return 1000;
+            }
+
+            @Override
+            public void retry(VolleyError error) throws VolleyError {
+
             }
         });
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
 
+// Access the RequestQueue through your singleton class.
+        MySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
 
     }
 
