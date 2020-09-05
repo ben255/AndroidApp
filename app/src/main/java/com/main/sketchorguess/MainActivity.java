@@ -30,6 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -99,27 +100,25 @@ public class MainActivity extends AppCompatActivity {
         // Instantiate the RequestQueue.
         String url = "http://10.0.0.9:3000/hello";
 
+        Map<String, String> parmas = new HashMap<>();
+        parmas.put("HELLO","WORLD");
+        parmas.put("LOOL", "LOOL");
+        Log.i("******", parmas.get("HELLO"));
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
-                (Request.Method.POST, url,  null, new Response.Listener<JSONObject>() {
+        CustomRequest jsonObjectRequest = new CustomRequest(Request.Method.POST, url, parmas, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
 
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try{
-                            Log.i("*********", "******");
-                            response.put("Hello", "World");
-                        }catch(JSONException e){
-                            Log.i("JSONERROR", e.toString());
-                        }
-                    }
-                }, new Response.ErrorListener() {
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
 
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // TODO: Handle error
-                        Log.i("*********", error.toString());
-                    }
-                });
+            }
+        });
+
+
+
         jsonObjectRequest.setRetryPolicy(new RetryPolicy() {
             @Override
             public int getCurrentTimeout() {
