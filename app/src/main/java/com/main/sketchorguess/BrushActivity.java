@@ -56,11 +56,19 @@ public class BrushActivity extends AppCompatActivity {
 
     private BottomNavigationView bottomNavigationView;
 
+    //serversideinfo
+    private String username = "";
+    private String gameSessionId = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_brush);
+
+        Intent intent = getIntent();
+        username = intent.getStringExtra("username");
+        gameSessionId = intent.getStringExtra("gamesessionid");
+
 
         drawView = (DrawCanvas) findViewById(R.id.DrawCanvas);
 
@@ -198,7 +206,7 @@ public class BrushActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(!editTextText.getText().toString().equals("")) {
-                    TextData data = new TextData("USER", editTextText.getText().toString());
+                    TextData data = new TextData(username, editTextText.getText().toString());
                     chatTextList.add(data);
                     chatList.setAdapter(adapter);
                 }

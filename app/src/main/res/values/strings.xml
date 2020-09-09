@@ -4,5 +4,7 @@
     <string name="penic_icon">Draw</string>
     <string name="brush_size">Size</string>
     <string name="username_name">Username</string>
+    <string name="search_btn">Search</string>
+    <string name="message_enter_username">Enter a username</string>
 
 </resources>

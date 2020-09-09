@@ -5,4 +5,6 @@
     <string name="penic_icon">Rita</string>
     <string name="brush_size">Storlek</string>
     <string name="username_name">Användarnamn</string>
+    <string name="search_btn">Leta</string>
+    <string name="message_enter_username">Skriv ett användarnamn</string>
 </resources>
