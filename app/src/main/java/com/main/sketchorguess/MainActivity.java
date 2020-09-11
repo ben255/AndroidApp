@@ -144,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
         CustomRequest jsonObjectRequest = new CustomRequest(Request.Method.POST, url, parmas, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
+
                 gameSessionId = response.toString();
             }
         }, new Response.ErrorListener() {

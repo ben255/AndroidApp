@@ -1,6 +1,7 @@
 package com.main.sketchorguess;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -16,7 +17,10 @@ public class DrawCanvas extends View{
 
 
     ArrayList<BrushData> dataArray;
-    Paint paint;
+    Paint paint, background;
+    Bitmap bitmap;
+    Canvas secondCanvas;
+    boolean runOnce = true;
 
     public DrawCanvas(Context context){
         super(context);
@@ -37,11 +41,19 @@ public class DrawCanvas extends View{
         paint.setColor(Color.BLACK);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(5);
+
+        background = new Paint();
+        background.setColor(Color.WHITE);
     }
 
     @Override
     protected void onDraw(Canvas canvas){
         super.onDraw(canvas);
+        if(runOnce){
+            bitmap = Bitmap.createBitmap(getWidth(),getHeight(), Bitmap.Config.ARGB_8888);
+            secondCanvas = new Canvas(bitmap);
+            runOnce = false;
+        }
         if(dataArray != null && dataArray.size() > 0) {
             for (int i = 0; i < dataArray.size(); i++) {
                 if (i > 0) {
@@ -49,22 +61,30 @@ public class DrawCanvas extends View{
                     int dy = dataArray.get(i).y - dataArray.get(i - 1).y;
                     if ((Math.pow(dx, 2) + Math.pow(dy, 2)) > 10 && (Math.pow(dx, 2) + Math.pow(dy, 2)) < 5000) {
 
-                        canvas.drawLine(dataArray.get(i - 1).x, dataArray.get(i - 1).y, dataArray.get(i).x, dataArray.get(i).y, dataArray.get(i).paint);
+                        secondCanvas.drawLine(dataArray.get(i - 1).x, dataArray.get(i - 1).y, dataArray.get(i).x, dataArray.get(i).y, dataArray.get(i).paint);
                     } else
-                        canvas.drawCircle(dataArray.get(i).x, dataArray.get(i).y, dataArray.get(i).brushWidth, dataArray.get(i).paint);
+                        secondCanvas.drawCircle(dataArray.get(i).x, dataArray.get(i).y, dataArray.get(i).brushWidth, dataArray.get(i).paint);
 
                 } else
-                    canvas.drawCircle(dataArray.get(i).x, dataArray.get(i).y, dataArray.get(i).brushWidth, dataArray.get(i).paint);
+                    secondCanvas.drawCircle(dataArray.get(i).x, dataArray.get(i).y, dataArray.get(i).brushWidth, dataArray.get(i).paint);
             }
 
-            canvas.drawCircle(dataArray.get(dataArray.size()-1).x,dataArray.get(dataArray.size()-1).y,dataArray.get(dataArray.size()-1).brushWidth,paint);
+            secondCanvas.drawCircle(dataArray.get(dataArray.size()-1).x,dataArray.get(dataArray.size()-1).y,dataArray.get(dataArray.size()-1).brushWidth,paint);
         }
-
+        canvas.drawBitmap(bitmap, 0, 0, background);
 
     }
 
+    public void invalidateBitmap(){
+        bitmap = Bitmap.createBitmap(getWidth(),getHeight(), Bitmap.Config.ARGB_8888);
+        secondCanvas = new Canvas(bitmap);
+    }
     public void setBrushData(ArrayList<BrushData> dataArray) {
         this.dataArray = dataArray;
+
         invalidate();
+    }
+    public Bitmap getBitmap(){
+        return bitmap;
     }
 }
