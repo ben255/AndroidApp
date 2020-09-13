@@ -41,6 +41,7 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -372,7 +373,7 @@ public class BrushActivity extends AppCompatActivity {
             public void run() {
                 while(downloadBitmap){
                     try {
-                        sleep(500);
+                        sleep(2000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -561,9 +562,9 @@ public class BrushActivity extends AppCompatActivity {
         String url = "http://10.0.0.9:3000/uploadingbitmap";
 
         Map<String, String> parmas = new HashMap<>();
-        Log.i("add", "uploading");
         parmas.put("gamesessionid", gameId);
         parmas.put("bitmap", encodeBase64(drawView.getBitmap()));
+        //Log.i("add***encode", encodeBase64(drawView.getBitmap()));
 
 
 
@@ -627,9 +628,28 @@ public class BrushActivity extends AppCompatActivity {
 
                 try {
                     //Bitmap bit = decodeBase64( response.get("bitmap").toString());
-                    JSONArray jsonArray = response.getJSONArray("bitmap");
-                    Log.i("addDownload", "data");
-                    //drawView.setBitmap(bit);
+                    JSONArray jsonArray = response.getJSONArray("bitdata");
+                    JSONObject jObject = jsonArray.getJSONObject(0);
+                    JSONObject jdataObject = jObject.getJSONObject("bitmap");
+                    JSONArray jdataArray = jdataObject.getJSONArray("data");
+
+                    StringBuilder s = new StringBuilder();
+                    for(int i = 0; i < jdataArray.length(); i ++){
+                        char c = (char)jdataArray.getInt(i);
+                        s.append(c);
+                    }
+                    Log.i("add..String", s.toString());
+                    //Log.i("add***decode", jObject.get("bitmap").toString());
+                    //Log.i("add....**", jdataObject.get("data").toString());
+
+
+                    //JSONArray jArrayObject = jdataObject.getJSONArray("data");
+                    //Log.i("add....**", jArrayObject.get(0).toString());
+
+                    Bitmap bit = decodeBase64(s.toString());
+
+                    drawView.setBitmap(bit);
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
