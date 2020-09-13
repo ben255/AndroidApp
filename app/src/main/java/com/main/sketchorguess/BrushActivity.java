@@ -21,6 +21,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,8 +42,12 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import static java.lang.Thread.sleep;
 
 public class BrushActivity extends AppCompatActivity {
 
@@ -51,6 +56,7 @@ public class BrushActivity extends AppCompatActivity {
     private BrushData brushData;
     private Paint paint;
     private ArrayList<BrushData> dataArray;
+
 
     private View brushComponent_layout;
     private View chatComponent_layout;
@@ -85,11 +91,24 @@ public class BrushActivity extends AppCompatActivity {
     int playerSize = 2;
     String[] playerUsername = new String[playerSize];
     String time = "";
+    int countdown = 240;
     int[] playerId = new int[playerSize];
     String[] playerColor = new String[playerSize];
     int[] playerScore = new int[playerSize];
-    String currword = "";
+    String currentWord = "";
+    String hiddenWord = "";
+    boolean runTurn = true;
 
+    Thread mainThread;
+    Thread startNewTurnThread;
+    boolean newTurn = false;
+
+    String currentPlayer = "";
+
+    Thread uploadBitmapThread;
+    Thread downloadBitmapThread;
+    boolean uploadBitmap = false;
+    boolean downloadBitmap = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -246,22 +265,121 @@ public class BrushActivity extends AppCompatActivity {
 
         toolbar = (Toolbar) findViewById(R.id.brush_toolbar);
         toolbar.setBackground(new ColorDrawable(getResources().getColor(R.color.colorBottomBar)));
-        toolbar.setTitle("__  __  __  __  __  __");
         setSupportActionBar(toolbar);
+        setTitleMain("Starting Soon");
 
+        playerColor[0] = "#a4c639";
+        playerColor[1] = "#356bb8";
+ //       playerColor[2] = "#bfbf38";
+   //     playerColor[3] = "#b5344e";
+     //   playerColor[4] = "#d6a4e5";
+       // playerColor[5] = "#303da6";
 
+        JSONObject jobject = null;
+        try {
+            jobject = new JSONObject(gameSessionId);
+            gameSessionId = jobject.get("gamesessionid").toString();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
     }
     protected void onStart(){
         super.onStart();
         drawView.invalidate();
-        JSONObject jobject = null;
-        try {
-            jobject = new JSONObject(gameSessionId);
-            startTurn(jobject.get("gamesessionid").toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+
+        runTurn = true;
+        mainThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.i("add currentplayer", currentPlayer);
+                if(currentPlayer.equals(username)){
+                    Log.i("add", "uploading");
+                    uploadBitmap = true;
+                    uploadBitmapThread.start();
+                }else{
+                    Log.i("add", "downloading");
+                    downloadBitmap = true;
+                    downloadBitmapThread.start();
+                }
+                while(runTurn) {
+                    try {
+                        sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    int max = countdown/60;
+                    countdown--;
+                    final StringBuilder temp = new StringBuilder();
+
+                    int tempMin = (countdown-(max*60));
+                    if(tempMin == -1)
+                        tempMin = 59;
+                    temp.append(+max+":"+tempMin);
+
+                    if(countdown <= 0){
+                        runTurn = false;
+                        countdown = 240;
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            setTitleMain(hiddenWord+"   "+temp.toString());
+                        }
+                    });
+                }
+
+            }
+        });
+        startup();
+    }
+    private void startup(){
+
+
+        startNewTurnThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(!newTurn){
+                    syncTurn(gameSessionId, username);
+                    try {
+                        sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                startTurn(gameSessionId);
+            }
+        });
+        startNewTurnThread.start();
+
+        uploadBitmapThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(uploadBitmap){
+                    try {
+                        sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    uploadBitmapToServer(gameSessionId);
+                }
+            }
+        });
+
+        downloadBitmapThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(downloadBitmap){
+                    try {
+                        sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    downloadBitmapFromServer(gameSessionId);
+                }
+            }
+        });
 
     }
 
@@ -269,12 +387,10 @@ public class BrushActivity extends AppCompatActivity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.clear();
         for(int i = 0; i < playerUsername.length; i++) {
-            StringBuilder temp = new StringBuilder(100);
-            temp.append("#");
-            temp.append(playerColor[i]);
+
             SpannableString s = new SpannableString(playerUsername[i]+": "+playerScore[i]);
-            Log.i("add", playerColor[i]);
-            s.setSpan(new ForegroundColorSpan(Color.parseColor("#a4c639")), 0, s.length(), 0);
+
+            s.setSpan(new ForegroundColorSpan(Color.parseColor(playerColor[i])), 0, s.length(), 0);
             menu.add(0, 0, 0, s);
 
         }
@@ -282,23 +398,25 @@ public class BrushActivity extends AppCompatActivity {
         return super.onPrepareOptionsMenu(menu);
     }
 
+    private void setTitleMain(String title){
+        getSupportActionBar().setTitle(title);
+    }
 
 
-    private void startTurn(String gameId) {
+    private void startTurn(final String gameId) {
         // Request a string response from the provided URL.
         // Instantiate the RequestQueue.
         String url = "http://10.0.0.9:3000/startturn";
 
         Map<String, String> parmas = new HashMap<>();
         Bitmap bit;
-        String test = "helloworld";
         if(drawView.getBitmap() == null){
             bit = BitmapFactory.decodeResource(getResources(), R.drawable.chat_icon);
             parmas.put("gamesessionid", gameId);
-            parmas.put("bitmap",getStringImage(bit));
+            parmas.put("bitmap",getBytesFromBitmap(bit).toString());
         }else{
             parmas.put("gamesessionid", gameId);
-            parmas.put("bitmap", getStringImage(drawView.getBitmap()));
+            parmas.put("bitmap", getBytesFromBitmap(drawView.getBitmap()).toString());
         }
 
 
@@ -319,16 +437,25 @@ public class BrushActivity extends AppCompatActivity {
                         playerUsername[x] = temp.get("uname").toString();
                         time = temp.get("currtime").toString();
                         playerId[x] = (int) Integer.valueOf(temp.get("id").toString());
-                        playerColor[x] = temp.get("color").toString();
                         playerScore[x] = (int) Integer.valueOf(temp.get("score").toString());
-                        currword = temp.get("currword").toString();
+                        currentWord = temp.get("currword").toString();
+                        currentPlayer = temp.get("currplayer").toString();
 
-                        Log.i("adduser****",playerUsername[x]+" "+time+" "+playerId[x]+" "+playerColor[x]+" "+playerScore[x]+" "+currword);
+                        Log.i("adduser****",playerUsername[x]+" "+time+" "+playerId[x]+" "+playerScore[x]+" "+currentWord+" "+currentPlayer);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
 
+                    final StringBuilder s = new StringBuilder("");
+                    for(int i = 0; i < currentWord.length(); i++){
+                        s.append("__");
+                        s.append(" ");
+                    }
+                    hiddenWord = s.toString();
+
                 }
+                mainThread.start();
+                runTurn = true;
             }
         }, new Response.ErrorListener() {
             @Override
@@ -364,12 +491,214 @@ public class BrushActivity extends AppCompatActivity {
 
     }
 
-    public String getStringImage(Bitmap bmp) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] imageBytes = baos.toByteArray();
-        String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
-        return encodedImage;
+    public void syncTurn(String gameId, String username){
 
+        // Request a string response from the provided URL.
+        // Instantiate the RequestQueue.
+        String url = "http://10.0.0.9:3000/syncturn";
+
+        Map<String, String> parmas = new HashMap<>();
+
+        parmas.put("gamesessionid", gameId);
+        parmas.put("username", username);
+
+
+
+        CustomRequest jsonObjectRequest = new CustomRequest(Request.Method.POST, url, parmas, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                // Log.i("Respons", response.toString());
+                try {
+                    String ready = response.get("turnready").toString();
+                    Log.i("adduser****",ready);
+                    if(ready.matches("true")){
+                        newTurn = true;
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.i("adduser****",error.toString());
+            }
+        });
+
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+/*
+        jsonObjectRequest.setRetryPolicy(new RetryPolicy() {
+            @Override
+            public int getCurrentTimeout() {
+                return 500;
+            }
+
+            @Override
+            public int getCurrentRetryCount() {
+                return 500;
+            }
+
+            @Override
+            public void retry(VolleyError error) throws VolleyError {
+
+            }
+        });*/
+
+// Access the RequestQueue through your singleton class.
+        MySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
+
+
+    }
+
+    private void uploadBitmapToServer(String gameId){
+
+        // Request a string response from the provided URL.
+        // Instantiate the RequestQueue.
+        String url = "http://10.0.0.9:3000/uploadingbitmap";
+
+        Map<String, String> parmas = new HashMap<>();
+        Log.i("add", "uploading");
+        parmas.put("gamesessionid", gameId);
+        parmas.put("bitmap", encodeBase64(drawView.getBitmap()));
+
+
+
+        CustomRequest jsonObjectRequest = new CustomRequest(Request.Method.POST, url, parmas, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+                Log.i("addsucess", "response.get().toString()");
+
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.i("adduser**up**",error.toString());
+            }
+        });
+
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+/*
+        jsonObjectRequest.setRetryPolicy(new RetryPolicy() {
+            @Override
+            public int getCurrentTimeout() {
+                return 500;
+            }
+
+            @Override
+            public int getCurrentRetryCount() {
+                return 500;
+            }
+
+            @Override
+            public void retry(VolleyError error) throws VolleyError {
+
+            }
+        });*/
+
+// Access the RequestQueue through your singleton class.
+        MySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
+
+
+    }
+    private void downloadBitmapFromServer(String gameId){
+
+        // Request a string response from the provided URL.
+        // Instantiate the RequestQueue.
+        String url = "http://10.0.0.9:3000/downloadbitmap";
+
+        Map<String, String> parmas = new HashMap<>();
+
+        parmas.put("gamesessionid", gameId);
+
+
+
+        CustomRequest jsonObjectRequest = new CustomRequest(Request.Method.POST, url, parmas, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+                try {
+                    //Bitmap bit = decodeBase64( response.get("bitmap").toString());
+                    JSONArray jsonArray = response.getJSONArray("bitmap");
+                    Log.i("addDownload", "data");
+                    //drawView.setBitmap(bit);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.i("adduser****download",error.toString());
+            }
+        });
+
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+/*
+        jsonObjectRequest.setRetryPolicy(new RetryPolicy() {
+            @Override
+            public int getCurrentTimeout() {
+                return 500;
+            }
+
+            @Override
+            public int getCurrentRetryCount() {
+                return 500;
+            }
+
+            @Override
+            public void retry(VolleyError error) throws VolleyError {
+
+            }
+        });*/
+
+// Access the RequestQueue through your singleton class.
+        MySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
+
+
+    }
+
+
+    public static byte[] getBytesFromBitmap(Bitmap bitmap) {
+        if (bitmap!=null) {
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 70, stream);
+            Log.i("add**************", stream.toByteArray().toString());
+            return stream.toByteArray();
+        }
+        return null;
+    }
+    public static Bitmap getBitmapFromBytes(byte[] bytes) {
+        if (bytes != null) {
+            return BitmapFactory.decodeByteArray(bytes, 0 ,bytes.length);
+        }
+        return null;
+    }
+    public String encodeBase64(Bitmap bit){
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bit.compress(Bitmap.CompressFormat.PNG, 100, baos); // Could be Bitmap.CompressFormat.PNG or Bitmap.CompressFormat.WEBP
+        byte[] bai = baos.toByteArray();
+
+        return Base64.encodeToString(bai, Base64.DEFAULT);
+    }
+    public Bitmap decodeBase64(String base64Image){
+        byte[] data = Base64.decode(base64Image, Base64.DEFAULT);
+        Bitmap bm;
+        BitmapFactory.Options opt = new BitmapFactory.Options();
+        opt.inMutable = true;
+        bm = BitmapFactory.decodeByteArray(data, 0, data.length, opt);
+        return bm;
     }
 }

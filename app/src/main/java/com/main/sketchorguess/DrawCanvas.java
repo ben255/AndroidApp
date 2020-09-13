@@ -44,6 +44,7 @@ public class DrawCanvas extends View{
 
         background = new Paint();
         background.setColor(Color.WHITE);
+
     }
 
     @Override
@@ -86,5 +87,10 @@ public class DrawCanvas extends View{
     }
     public Bitmap getBitmap(){
         return bitmap;
+    }
+
+    public void setBitmap(Bitmap bitmap){
+        this.bitmap = bitmap;
+        invalidate();
     }
 }
