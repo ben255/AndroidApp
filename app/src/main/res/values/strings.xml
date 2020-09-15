@@ -6,5 +6,6 @@
     <string name="username_name">Username</string>
     <string name="search_btn">Search</string>
     <string name="message_enter_username">Enter a username</string>
+    <string name="starting_soon">Starting Soon</string>
 
 </resources>

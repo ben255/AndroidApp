@@ -2,6 +2,7 @@ package com.main.sketchorguess;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -56,6 +57,8 @@ public class ChatAdapter extends BaseAdapter {
 
         userName.setText(data.get(position).user);
         userText.setText(data.get(position).text);
+        userName.setTextColor(Color.parseColor(data.get(position).color));
+        userText.setTextColor(Color.parseColor(data.get(position).color));
 
 
         return convertView;

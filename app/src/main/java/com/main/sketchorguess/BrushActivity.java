@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.util.Base64;
@@ -48,6 +49,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static android.text.InputType.TYPE_NULL;
 import static java.lang.Thread.sleep;
 
 public class BrushActivity extends AppCompatActivity {
@@ -111,6 +113,11 @@ public class BrushActivity extends AppCompatActivity {
     boolean uploadBitmap = false;
     boolean downloadBitmap = false;
 
+    Thread downloadChatThread;
+    boolean downloadchat = false;
+
+    boolean drawing = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
@@ -128,7 +135,6 @@ public class BrushActivity extends AppCompatActivity {
 
 
         brushComponentView = (BrushComponentView) findViewById(R.id.brush_component_view);
-
         brushComponentView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -257,9 +263,9 @@ public class BrushActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(!editTextText.getText().toString().equals("")) {
-                    TextData data = new TextData(username, editTextText.getText().toString());
-                    chatTextList.add(data);
-                    chatList.setAdapter(adapter);
+
+                    uploadChat(gameSessionId, editTextText.getText().toString(), username);
+                    editTextText.setText("");
                 }
             }
         });
@@ -267,7 +273,7 @@ public class BrushActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.brush_toolbar);
         toolbar.setBackground(new ColorDrawable(getResources().getColor(R.color.colorBottomBar)));
         setSupportActionBar(toolbar);
-        setTitleMain("Starting Soon");
+        setTitleMain(getResources().getString(R.string.starting_soon));
 
         playerColor[0] = "#a4c639";
         playerColor[1] = "#356bb8";
@@ -285,6 +291,8 @@ public class BrushActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+
+
     }
     protected void onStart(){
         super.onStart();
@@ -294,16 +302,35 @@ public class BrushActivity extends AppCompatActivity {
         mainThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.i("add currentplayer", currentPlayer);
                 if(currentPlayer.equals(username)){
-                    Log.i("add", "uploading");
                     uploadBitmap = true;
+                    downloadBitmap = false;
                     uploadBitmapThread.start();
+                    editTextText.setFocusable(false);
+                    editTextText.setFocusableInTouchMode(false);
+                    editTextText.setInputType(TYPE_NULL);
+                    drawing = true;
                 }else{
-                    Log.i("add", "downloading");
                     downloadBitmap = true;
+                    uploadBitmap = false;
                     downloadBitmapThread.start();
+                    editTextText.setFocusable(true);
+                    editTextText.setFocusableInTouchMode(true);
+                    editTextText.setInputType(InputType.TYPE_CLASS_TEXT);
+                    drawing = false;
                 }
+
+                if(!drawing) {
+                    final StringBuilder s = new StringBuilder("");
+                    for (int i = 0; i < currentWord.length(); i++) {
+                        s.append("_");
+                        s.append(" ");
+                    }
+                    hiddenWord = s.toString();
+                }else
+                    hiddenWord = currentWord;
+
+
                 while(runTurn) {
                     try {
                         sleep(1000);
@@ -336,7 +363,6 @@ public class BrushActivity extends AppCompatActivity {
         startup();
     }
     private void startup(){
-
 
         startNewTurnThread = new Thread(new Runnable() {
             @Override
@@ -371,14 +397,30 @@ public class BrushActivity extends AppCompatActivity {
         downloadBitmapThread = new Thread(new Runnable() {
             @Override
             public void run() {
+                uploadBitmapToServer(gameSessionId);
                 while(downloadBitmap){
                     try {
-                        sleep(2000);
+                        sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     downloadBitmapFromServer(gameSessionId);
                 }
+            }
+        });
+
+        downloadChatThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(downloadchat){
+                    try {
+                        sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    downloadChat(gameSessionId);
+                }
+
             }
         });
 
@@ -410,6 +452,7 @@ public class BrushActivity extends AppCompatActivity {
         String url = "http://10.0.0.9:3000/startturn";
 
         Map<String, String> parmas = new HashMap<>();
+        /*
         Bitmap bit;
         if(drawView.getBitmap() == null){
             bit = BitmapFactory.decodeResource(getResources(), R.drawable.chat_icon);
@@ -418,7 +461,9 @@ public class BrushActivity extends AppCompatActivity {
         }else{
             parmas.put("gamesessionid", gameId);
             parmas.put("bitmap", getBytesFromBitmap(drawView.getBitmap()).toString());
-        }
+        }*/
+
+        parmas.put("gamesessionid", gameId);
 
 
 
@@ -442,21 +487,16 @@ public class BrushActivity extends AppCompatActivity {
                         currentWord = temp.get("currword").toString();
                         currentPlayer = temp.get("currplayer").toString();
 
-                        Log.i("adduser****",playerUsername[x]+" "+time+" "+playerId[x]+" "+playerScore[x]+" "+currentWord+" "+currentPlayer);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
-                    final StringBuilder s = new StringBuilder("");
-                    for(int i = 0; i < currentWord.length(); i++){
-                        s.append("__");
-                        s.append(" ");
-                    }
-                    hiddenWord = s.toString();
-
                 }
+
+
                 mainThread.start();
                 runTurn = true;
+                downloadchat = true;
+                downloadChatThread.start();
             }
         }, new Response.ErrorListener() {
             @Override
@@ -564,15 +604,12 @@ public class BrushActivity extends AppCompatActivity {
         Map<String, String> parmas = new HashMap<>();
         parmas.put("gamesessionid", gameId);
         parmas.put("bitmap", encodeBase64(drawView.getBitmap()));
-        //Log.i("add***encode", encodeBase64(drawView.getBitmap()));
 
 
 
         CustomRequest jsonObjectRequest = new CustomRequest(Request.Method.POST, url, parmas, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-
-                Log.i("addsucess", "response.get().toString()");
 
 
             }
@@ -585,7 +622,7 @@ public class BrushActivity extends AppCompatActivity {
 
         jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
                 0,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                0,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 /*
         jsonObjectRequest.setRetryPolicy(new RetryPolicy() {
@@ -638,16 +675,8 @@ public class BrushActivity extends AppCompatActivity {
                         char c = (char)jdataArray.getInt(i);
                         s.append(c);
                     }
-                    Log.i("add..String", s.toString());
-                    //Log.i("add***decode", jObject.get("bitmap").toString());
-                    //Log.i("add....**", jdataObject.get("data").toString());
-
-
-                    //JSONArray jArrayObject = jdataObject.getJSONArray("data");
-                    //Log.i("add....**", jArrayObject.get(0).toString());
 
                     Bitmap bit = decodeBase64(s.toString());
-
                     drawView.setBitmap(bit);
 
                 } catch (JSONException e) {
@@ -659,6 +688,141 @@ public class BrushActivity extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.i("adduser****download",error.toString());
+            }
+        });
+
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                0,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+/*
+        jsonObjectRequest.setRetryPolicy(new RetryPolicy() {
+            @Override
+            public int getCurrentTimeout() {
+                return 500;
+            }
+
+            @Override
+            public int getCurrentRetryCount() {
+                return 500;
+            }
+
+            @Override
+            public void retry(VolleyError error) throws VolleyError {
+
+            }
+        });*/
+
+// Access the RequestQueue through your singleton class.
+        MySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
+
+
+    }
+
+
+    private void uploadChat(String gameId, String textmessage, String username){
+
+        // Request a string response from the provided URL.
+        // Instantiate the RequestQueue.
+        String url = "http://10.0.0.9:3000/uploadchat";
+
+        Map<String, String> parmas = new HashMap<>();
+
+        parmas.put("gamesessionid", gameId);
+        parmas.put("username", username);
+        parmas.put("message", textmessage);
+
+
+
+        CustomRequest jsonObjectRequest = new CustomRequest(Request.Method.POST, url, parmas, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    Log.i("add...chatcheck", response.getString("guess"));
+                    if(response.getString("guess").matches("true")){
+                        editTextText.setFocusable(false);
+                        editTextText.setFocusableInTouchMode(false);
+                        editTextText.setInputType(TYPE_NULL);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.i("adduser****chatup",error.toString());
+            }
+        });
+
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                100,
+                0,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+/*
+        jsonObjectRequest.setRetryPolicy(new RetryPolicy() {
+            @Override
+            public int getCurrentTimeout() {
+                return 500;
+            }
+
+            @Override
+            public int getCurrentRetryCount() {
+                return 500;
+            }
+
+            @Override
+            public void retry(VolleyError error) throws VolleyError {
+
+            }
+        });
+        */
+
+
+// Access the RequestQueue through your singleton class.
+        MySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
+
+
+    }
+
+    public void downloadChat(String gameId){
+
+        // Request a string response from the provided URL.
+        // Instantiate the RequestQueue.
+        String url = "http://10.0.0.9:3000/downloadchat";
+
+        Map<String, String> parmas = new HashMap<>();
+
+        parmas.put("gamesessionid", gameId);
+
+        CustomRequest jsonObjectRequest = new CustomRequest(Request.Method.POST, url, parmas, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+                try {
+                    JSONArray jObject = response.getJSONArray("chatdata");
+                    chatTextList.clear();
+                    for(int i = 0; i < jObject.length(); i++){
+                        JSONObject jO = (JSONObject) jObject.get(i);
+                        for(int j = 0; j < playerUsername.length; j++) {
+                            if(playerUsername[j].matches(jO.getString("uname"))){
+
+                                TextData data = new TextData(jO.getString("uname"), jO.getString("chattext"), playerColor[j]);
+                                chatTextList.add(data);
+                            }
+                        }
+                    }
+                    chatList.setAdapter(adapter);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.i("adduser****chatdown",error.toString());
             }
         });
 
@@ -690,6 +854,73 @@ public class BrushActivity extends AppCompatActivity {
 
     }
 
+    public void runThisWhilePlaying(String gameId){
+
+        // Request a string response from the provided URL.
+        // Instantiate the RequestQueue.
+        String url = "http://10.0.0.9:3000/runthiswhileplaying";
+
+        Map<String, String> parmas = new HashMap<>();
+
+        parmas.put("gamesessionid", gameId);
+
+        CustomRequest jsonObjectRequest = new CustomRequest(Request.Method.POST, url, parmas, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+                try {
+                    JSONArray jObject = response.getJSONArray("chatdata");
+                    chatTextList.clear();
+                    for(int i = 0; i < jObject.length(); i++){
+                        JSONObject jO = (JSONObject) jObject.get(i);
+                        for(int j = 0; j < playerUsername.length; j++) {
+                            if(playerUsername[j].matches(jO.getString("uname"))){
+
+                                TextData data = new TextData(jO.getString("uname"), jO.getString("chattext"), playerColor[j]);
+                                chatTextList.add(data);
+                            }
+                        }
+                    }
+                    chatList.setAdapter(adapter);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.i("adduser****chatdown",error.toString());
+            }
+        });
+
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+/*
+        jsonObjectRequest.setRetryPolicy(new RetryPolicy() {
+            @Override
+            public int getCurrentTimeout() {
+                return 500;
+            }
+
+            @Override
+            public int getCurrentRetryCount() {
+                return 500;
+            }
+
+            @Override
+            public void retry(VolleyError error) throws VolleyError {
+
+            }
+        });*/
+
+// Access the RequestQueue through your singleton class.
+        MySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
+
+
+    }
 
     public static byte[] getBytesFromBitmap(Bitmap bitmap) {
         if (bitmap!=null) {
