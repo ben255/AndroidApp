@@ -198,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject jobject = new JSONObject(response.toString());
                     if(jobject.get("gamesessionready").toString().matches("true")){
+                        
                         threadRun = false;
                         Intent myIntent = new Intent(MainActivity.this, BrushActivity.class);
                         myIntent.putExtra("username", loginText.getText().toString()); //Optional parameters
