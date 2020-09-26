@@ -356,6 +356,7 @@ public class BrushActivity extends AppCompatActivity {
                             setTitleMain(hiddenWord+"   "+temp.toString());
                         }
                     });
+                    runThisWhilePlaying(gameSessionId, username);
                 }
 
             }
@@ -739,6 +740,7 @@ public class BrushActivity extends AppCompatActivity {
             public void onResponse(JSONObject response) {
                 try {
                     Log.i("add...chatcheck", response.getString("guess"));
+
                     if(response.getString("guess").matches("true")){
                         editTextText.setFocusable(false);
                         editTextText.setFocusableInTouchMode(false);
@@ -854,7 +856,7 @@ public class BrushActivity extends AppCompatActivity {
 
     }
 
-    public void runThisWhilePlaying(String gameId){
+    public void runThisWhilePlaying(String gameId, String username){
 
         // Request a string response from the provided URL.
         // Instantiate the RequestQueue.
@@ -863,28 +865,12 @@ public class BrushActivity extends AppCompatActivity {
         Map<String, String> parmas = new HashMap<>();
 
         parmas.put("gamesessionid", gameId);
+        parmas.put("username", username);
 
         CustomRequest jsonObjectRequest = new CustomRequest(Request.Method.POST, url, parmas, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
 
-                try {
-                    JSONArray jObject = response.getJSONArray("chatdata");
-                    chatTextList.clear();
-                    for(int i = 0; i < jObject.length(); i++){
-                        JSONObject jO = (JSONObject) jObject.get(i);
-                        for(int j = 0; j < playerUsername.length; j++) {
-                            if(playerUsername[j].matches(jO.getString("uname"))){
-
-                                TextData data = new TextData(jO.getString("uname"), jO.getString("chattext"), playerColor[j]);
-                                chatTextList.add(data);
-                            }
-                        }
-                    }
-                    chatList.setAdapter(adapter);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
 
             }
         }, new Response.ErrorListener() {
